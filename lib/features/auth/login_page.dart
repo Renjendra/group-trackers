@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 
+import 'register_page.dart';
+
+import '../../shared/widgets/app_text_field.dart';
+import '../../shared/widgets/primary_button.dart';
+
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -18,7 +23,7 @@ class LoginPage extends StatelessWidget {
               const Spacer(),
 
               const Text(
-                "Welcome Back ",
+                "Welcome to Group Trackers ",
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
@@ -38,31 +43,15 @@ class LoginPage extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Username",
-                  filled: true,
-                  fillColor: AppColors.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              const AppTextField(
+                hintText: "Username",
               ),
 
               const SizedBox(height: 20),
 
-              TextField(
+              const AppTextField(
+                hintText: "Password",
                 obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  filled: true,
-                  fillColor: AppColors.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
               ),
 
               const SizedBox(height: 30),
@@ -70,12 +59,9 @@ class LoginPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 55,
-                child: ElevatedButton(
+                child: PrimaryButton(
+                  text: "Login",
                   onPressed: () {},
-                  child: const Text(
-                    "Login",
-                    style: TextStyle(fontSize: 18),
-                  ),
                 ),
               ),
 
@@ -83,7 +69,14 @@ class LoginPage extends StatelessWidget {
 
               Center(
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegisterPage(),
+                      ),
+                    );
+                  },
                   child: const Text(
                     "Don't have an account? Register",
                   ),
