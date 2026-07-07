@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/splash/splash_page.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
   runApp(const GroupTrackersApp());
@@ -13,9 +14,7 @@ class GroupTrackersApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Group Trackers',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: AppTheme.darkTheme,
       home: const SplashPage(),
     );
   }
