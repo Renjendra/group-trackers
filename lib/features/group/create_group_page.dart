@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../models/group_model.dart';
+
+import '../../core/utils/code_generator.dart';
+
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
 
@@ -42,7 +46,20 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context, groupController.text);
+                   if (groupController.text.trim().isEmpty) {
+                    return;
+                  }
+                  final group = GroupModel(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    name: groupController.text.trim(),
+                    code: CodeGenerator.generateCode(),
+                    members: 1,
+                  );
+
+                  Navigator.pop(
+                    context,
+                    group,
+                  );
                 },
                 child: const Text("Create Group"),
               ),

@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../group/create_group_page.dart';
 
+import '../../models/group_model.dart';
+
+import '../../services/group_service.dart';
+
+import '../group/group_detail_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -10,7 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<String> groups = [];
+  final GroupService groupService = GroupService();
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +44,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 40),
 
               Expanded(
-                child: groups.isEmpty
+                child: groupService.groups.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -69,15 +75,31 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                     : ListView.builder(
-                        itemCount: groups.length,
+                        itemCount:groupService.groups.length,
                         itemBuilder: (context, index) {
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: const Icon(Icons.groups),
-                              title: Text(groups[index]),
-                              subtitle: const Text("1 Member"),
-                              trailing: const Icon(Icons.arrow_forward_ios),
+                        final group = groupService.groups[index];
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GroupDetailPage(group: group),
+                                ),
+                              );
+
+                              if (!mounted) return;
+
+                              setState(() {});
+                            },
+                            leading: const Icon(Icons.groups),
+                            title: Text(group.name),
+                            subtitle: Text(
+                              "Code: ${group.code}\nMembers: ${group.members}",
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios),
                             ),
                           );
                         },
@@ -96,10 +118,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
 
-                    if (result != null &&
-                        result.toString().trim().isNotEmpty) {
+                    if (result is GroupModel){
                       setState(() {
-                        groups.add(result.toString().trim());
+                        groupService.addGroup(result);
                       });
                     }
                   },
