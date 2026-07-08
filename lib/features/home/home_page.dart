@@ -8,6 +8,8 @@ import '../../services/group_service.dart';
 
 import '../group/group_detail_page.dart';
 
+import '../group/join_group_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -106,27 +108,53 @@ class _HomePageState extends State<HomePage> {
                       ),
               ),
 
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CreateGroupPage(),
-                      ),
-                    );
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateGroupPage(),
+                          ),
+                        );
 
-                    if (result is GroupModel){
-                      setState(() {
-                        groupService.addGroup(result);
-                      });
-                    }
-                  },
-                  child: const Text("Create Group"),
+                        if (result is GroupModel) {
+                          setState(() {
+                            groupService.addGroup(result);
+                          });
+                        }
+                      },
+                      child: const Text("Create Group"),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const JoinGroupPage(),
+                        ),
+                      );
+
+                      if (result == true) {
+                        setState(() {});
+                      }
+                    },
+                    child: const Text("Join Group"),
+                  ),
                 ),
-              ),
+                ],
+              )
             ],
           ),
         ),
