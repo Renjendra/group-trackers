@@ -5,7 +5,12 @@ import '../../core/constants/app_colors.dart';
 import 'register_page.dart';
 
 import '../../shared/widgets/app_text_field.dart';
+
 import '../../shared/widgets/primary_button.dart';
+
+import '../home/home_page.dart';
+
+
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -61,8 +66,15 @@ class LoginPage extends StatelessWidget {
                 height: 55,
                 child: PrimaryButton(
                   text: "Login",
-                  onPressed: () {},
-                ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HomePage(),
+                      ),
+                    );
+                  },
+                )
               ),
 
               const SizedBox(height: 20),

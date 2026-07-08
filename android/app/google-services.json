@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "750325641235",
+    "project_id": "group-trackers",
+    "storage_bucket": "group-trackers.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:750325641235:android:21627707817af964f24fe6",
+        "android_client_info": {
+          "package_name": "com.example.group_trackers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdwfWNNDLxWLegqubsAmiyB4UH_CdD6Ac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
