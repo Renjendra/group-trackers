@@ -1,9 +1,87 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController usernameController = TextEditingController();
+
+  final TextEditingController passwordController = TextEditingController();
+
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+
+  final AuthService authService = AuthService();
+
+  bool isLoading = false;
+
+  Future<void> register() async {
+    if (usernameController.text.trim().isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please complete all fields"),
+        ),
+      );
+      return;
+    }
+
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password does not match"),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final result = await authService.register(
+    username: usernameController.text.trim(),
+    password: passwordController.text,
+  );
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Account created successfully"),
+        ),
+      );
+
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +118,7 @@ class RegisterPage extends StatelessWidget {
                 const SizedBox(height: 40),
 
                 TextField(
+                  controller: usernameController,
                   decoration: InputDecoration(
                     hintText: "Username",
                     filled: true,
@@ -54,6 +133,7 @@ class RegisterPage extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 TextField(
+                  controller: passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -69,6 +149,7 @@ class RegisterPage extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 TextField(
+                  controller: confirmPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Confirm Password",
@@ -87,8 +168,10 @@ class RegisterPage extends StatelessWidget {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: () {},
-                    child: const Text("Create Account"),
+                    onPressed: isLoading ? null : register,
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text("Create Account"),
                   ),
                 ),
 

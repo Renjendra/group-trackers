@@ -1,19 +1,65 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
-
-import 'register_page.dart';
-
-import '../../shared/widgets/app_text_field.dart';
-
-import '../../shared/widgets/primary_button.dart';
+import '../../services/auth_service.dart';
 
 import '../home/home_page.dart';
+import 'register_page.dart';
 
-
-
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final AuthService authService = AuthService();
+
+  final TextEditingController usernameController =
+      TextEditingController();
+
+  final TextEditingController passwordController =
+      TextEditingController();
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> login() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final result = await authService.login(
+      username: usernameController.text.trim(),
+      password: passwordController.text,
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (!mounted) return;
+
+    if (result == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomePage(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +74,7 @@ class LoginPage extends StatelessWidget {
               const Spacer(),
 
               const Text(
-                "Welcome to Group Trackers ",
+                "Welcome to Group Trackers",
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
@@ -48,15 +94,33 @@ class LoginPage extends StatelessWidget {
 
               const SizedBox(height: 40),
 
-              const AppTextField(
-                hintText: "Username",
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  hintText: "Username",
+                  filled: true,
+                  fillColor: AppColors.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
 
-              const AppTextField(
-                hintText: "Password",
+              TextField(
+                controller: passwordController,
                 obscureText: true,
+                decoration: InputDecoration(
+                  hintText: "Password",
+                  filled: true,
+                  fillColor: AppColors.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 30),
@@ -64,17 +128,12 @@ class LoginPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 55,
-                child: PrimaryButton(
-                  text: "Login",
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
-                    );
-                  },
-                )
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : login,
+                  child: isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text("Login"),
+                ),
               ),
 
               const SizedBox(height: 20),
