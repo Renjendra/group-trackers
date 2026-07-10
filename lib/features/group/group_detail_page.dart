@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/group_model.dart';
-import '../../services/group_service.dart';
+import '../../services/firestore_service.dart';
+
 import 'edit_group_page.dart';
 
 class GroupDetailPage extends StatefulWidget {
@@ -18,6 +19,8 @@ class GroupDetailPage extends StatefulWidget {
 
 class _GroupDetailPageState extends State<GroupDetailPage> {
   late GroupModel group;
+
+  final FirestoreService firestoreService = FirestoreService();
 
   @override
   void initState() {
@@ -58,13 +61,13 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
       },
     );
 
-    if (confirm == true) {
-      GroupService().removeGroup(group.id);
+    if (confirm != true) return;
 
-      if (!mounted) return;
+    await firestoreService.deleteGroup(group.id);
 
-      Navigator.pop(context, true);
-    }
+    if (!mounted) return;
+
+    Navigator.pop(context);
   }
 
   Future<void> editGroup() async {
@@ -78,8 +81,6 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
     if (!mounted) return;
 
     if (result != null) {
-      GroupService().updateGroup(result);
-
       setState(() {
         group = result;
       });

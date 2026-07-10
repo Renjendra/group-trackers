@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../group/create_group_page.dart';
-
 import '../../models/group_model.dart';
+import '../../services/firestore_service.dart';
 
-import '../../services/group_service.dart';
-
+import '../group/create_group_page.dart';
 import '../group/group_detail_page.dart';
-
 import '../group/join_group_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,7 +15,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GroupService groupService = GroupService();
+  final FirestoreService firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +43,18 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 40),
 
               Expanded(
-                child: groupService.groups.isEmpty
-                    ? Center(
+                child: StreamBuilder<List<GroupModel>>(
+                  stream: firestoreService.getGroups(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -68,44 +75,44 @@ class _HomePageState extends State<HomePage> {
                             const Text(
                               "Create your first group\nto start tracking together.",
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount:groupService.groups.length,
-                        itemBuilder: (context, index) {
-                        final group = groupService.groups[index];
+                      );
+                    }
+
+                    final groups = snapshot.data!;
+
+                    return ListView.builder(
+                      itemCount: groups.length,
+                      itemBuilder: (context, index) {
+                        final group = groups[index];
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => GroupDetailPage(group: group),
-                                ),
-                              );
-
-                              if (!mounted) return;
-
-                              setState(() {});
-                            },
                             leading: const Icon(Icons.groups),
                             title: Text(group.name),
                             subtitle: Text(
                               "Code: ${group.code}\nMembers: ${group.members}",
                             ),
-                            trailing: const Icon(Icons.arrow_forward_ios),
-                            ),
-                          );
-                        },
-                      ),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      GroupDetailPage(group: group),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
 
               Column(
@@ -114,19 +121,14 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        final result = await Navigator.push(
+                      onPressed: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CreateGroupPage(),
+                            builder: (_) =>
+                                const CreateGroupPage(),
                           ),
                         );
-
-                        if (result is GroupModel) {
-                          setState(() {
-                            groupService.addGroup(result);
-                          });
-                        }
                       },
                       child: const Text("Create Group"),
                     ),
@@ -135,26 +137,23 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 12),
 
                   SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const JoinGroupPage(),
-                        ),
-                      );
-
-                      if (result == true) {
-                        setState(() {});
-                      }
-                    },
-                    child: const Text("Join Group"),
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const JoinGroupPage(),
+                          ),
+                        );
+                      },
+                      child: const Text("Join Group"),
+                    ),
                   ),
-                ),
                 ],
-              )
+              ),
             ],
           ),
         ),

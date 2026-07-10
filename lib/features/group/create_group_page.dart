@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/group_model.dart';
-
 import '../../core/utils/code_generator.dart';
+import '../../models/group_model.dart';
+import '../../services/firestore_service.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -13,6 +15,49 @@ class CreateGroupPage extends StatefulWidget {
 
 class _CreateGroupPageState extends State<CreateGroupPage> {
   final TextEditingController groupController = TextEditingController();
+
+  final FirestoreService firestoreService = FirestoreService();
+
+  bool isLoading = false;
+
+  Future<void> createGroup() async {
+    if (groupController.text.trim().isEmpty) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      setState(() {
+        isLoading = false;
+      });
+
+      return;
+    }
+
+    final group = GroupModel(
+      id: FirebaseFirestore.instance.collection('groups').doc().id,
+      name: groupController.text.trim(),
+      code: CodeGenerator.generateCode(),
+      ownerId: user.uid,
+      members: 1,
+      createdAt: Timestamp.now(),
+    );
+
+    await firestoreService.createGroup(group);
+
+    if (!mounted) return;
+
+    Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    groupController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,36 +77,27 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 12),
+
             TextField(
               controller: groupController,
               decoration: const InputDecoration(
-                hintText: "Example: My Friends",
+                hintText: "Example: NoFap Squad",
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 24),
+
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-                   if (groupController.text.trim().isEmpty) {
-                    return;
-                  }
-                  final group = GroupModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: groupController.text.trim(),
-                    code: CodeGenerator.generateCode(),
-                    members: 1,
-                  );
-
-                  Navigator.pop(
-                    context,
-                    group,
-                  );
-                },
-                child: const Text("Create Group"),
+                onPressed: isLoading ? null : createGroup,
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text("Create Group"),
               ),
             ),
           ],

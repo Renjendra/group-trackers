@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/group_model.dart';
+import '../../services/firestore_service.dart';
 
 class EditGroupPage extends StatefulWidget {
   final GroupModel group;
@@ -17,6 +18,10 @@ class EditGroupPage extends StatefulWidget {
 class _EditGroupPageState extends State<EditGroupPage> {
   late TextEditingController nameController;
 
+  final FirestoreService firestoreService = FirestoreService();
+
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,10 +37,20 @@ class _EditGroupPageState extends State<EditGroupPage> {
     super.dispose();
   }
 
-  void saveGroup() {
+  Future<void> saveGroup() async {
+    if (nameController.text.trim().isEmpty) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
     final updatedGroup = widget.group.copyWith(
       name: nameController.text.trim(),
     );
+
+    await firestoreService.updateGroup(updatedGroup);
+
+    if (!mounted) return;
 
     Navigator.pop(context, updatedGroup);
   }
@@ -63,8 +78,10 @@ class _EditGroupPageState extends State<EditGroupPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: saveGroup,
-                child: const Text("Save"),
+                onPressed: isLoading ? null : saveGroup,
+                child: isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text("Save"),
               ),
             ),
           ],
