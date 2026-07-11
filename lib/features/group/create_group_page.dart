@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/utils/code_generator.dart';
 import '../../models/group_model.dart';
 import '../../services/firestore_service.dart';
+import '../../models/member_model.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -46,7 +47,18 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       createdAt: Timestamp.now(),
     );
 
-    await firestoreService.createGroup(group);
+   final owner = MemberModel(
+  uid: user.uid,
+  username: user.email ?? "Unknown",
+  streak: 0,
+  role: "owner",
+  joinedAt: Timestamp.now(),
+);
+
+await firestoreService.createGroup(
+  group,
+  owner,
+);
 
     if (!mounted) return;
 
@@ -83,7 +95,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             TextField(
               controller: groupController,
               decoration: const InputDecoration(
-                hintText: "Example: NoFap Squad",
+                hintText: "Example: Family",
                 border: OutlineInputBorder(),
               ),
             ),

@@ -1,15 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/group_model.dart';
+import '../models/member_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final CollectionReference groups =
-      FirebaseFirestore.instance.collection('groups');
+  CollectionReference get groups =>
+      _firestore.collection('groups');
 
-  Future<void> createGroup(GroupModel group) async {
-    await groups.doc(group.id).set(group.toMap());
+  Future<void> createGroup(
+    GroupModel group,
+    MemberModel owner,
+  ) async {
+    final batch = _firestore.batch();
+
+    final groupRef = groups.doc(group.id);
+
+    batch.set(
+      groupRef,
+      group.toMap(),
+    );
+
+    batch.set(
+      groupRef
+          .collection('members')
+          .doc(owner.uid),
+      owner.toMap(),
+    );
+
+    await batch.commit();
   }
 
   Stream<List<GroupModel>> getGroups() {
