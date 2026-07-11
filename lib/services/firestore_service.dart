@@ -212,4 +212,71 @@ Stream<List<GroupModel>> getUserGroups(
   });
 }
 
+
+Future<void> resetMember(
+  String groupId,
+  String uid,
+) async {
+  await groups
+      .doc(groupId)
+      .collection('members')
+      .doc(uid)
+      .update({
+    'lastResetAt': Timestamp.now(),
+  });
+}
+
+Future<void> leaveGroup(
+  String groupId,
+  String uid,
+) async {
+  final batch = _firestore.batch();
+
+  final groupRef = groups.doc(groupId);
+
+  batch.delete(
+    groupRef
+        .collection('members')
+        .doc(uid),
+  );
+
+  batch.update(
+    groupRef,
+    {
+      'members': FieldValue.increment(-1),
+    },
+  );
+
+  await batch.commit();
+}
+
+// ==========================
+// GET MEMBERS
+// ==========================
+
+Stream<List<MemberModel>> getMembers(
+  String groupId,
+) {
+  return groups
+      .doc(groupId)
+      .collection('members')
+      .snapshots()
+      .map((snapshot) {
+
+    final members = snapshot.docs.map((doc) {
+      return MemberModel.fromMap(
+        doc.id,
+        doc.data(),
+      );
+    }).toList();
+
+    members.sort(
+      (a, b) =>
+          b.streakDays.compareTo(a.streakDays),
+    );
+
+    return members;
+  });
+}
+
 }

@@ -94,12 +94,12 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
   }
 
   final member = MemberModel(
-    uid: user.uid,
-    username: currentUser.username,
-    streak: 0,
-    role: "member",
-    joinedAt: Timestamp.now(),
-  );
+  uid: user.uid,
+  username: currentUser.username,
+  role: "member",
+  joinedAt: Timestamp.now(),
+  lastResetAt: Timestamp.now(),
+);
 
   await firestoreService.joinGroup(
     foundGroup!,

@@ -64,12 +64,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   );
 
   final owner = MemberModel(
-    uid: user.uid,
-    username: currentUser.username,
-    streak: 0,
-    role: "owner",
-    joinedAt: Timestamp.now(),
-  );
+  uid: user.uid,
+  username: currentUser.username,
+  role: "owner",
+  joinedAt: Timestamp.now(),
+  lastResetAt: Timestamp.now(),
+);
 
   await firestoreService.createGroup(
     group,
