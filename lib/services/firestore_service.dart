@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/group_model.dart';
 import '../models/member_model.dart';
+import '../models/user_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  CollectionReference get groups =>
-      _firestore.collection('groups');
+  CollectionReference get groups => _firestore.collection('groups');
+
+  CollectionReference get users => _firestore.collection('users');
 
   // ==========================
   // CREATE GROUP
@@ -27,9 +29,7 @@ class FirestoreService {
     );
 
     batch.set(
-      groupRef
-          .collection('members')
-          .doc(owner.uid),
+      groupRef.collection('members').doc(owner.uid),
       owner.toMap(),
     );
 
@@ -80,7 +80,7 @@ class FirestoreService {
 
     return MemberModel.fromMap(
       snapshot.id,
-      snapshot.data()!,
+      snapshot.data() as Map<String, dynamic>,
     );
   }
 
@@ -92,26 +92,35 @@ class FirestoreService {
     GroupModel group,
     MemberModel member,
   ) async {
+    final memberRef = groups
+        .doc(group.id)
+        .collection('members')
+        .doc(member.uid);
+
+    // Jangan menambah member jika sudah bergabung
+    if ((await memberRef.get()).exists) {
+      return;
+    }
+
     final batch = _firestore.batch();
 
-    final groupRef = groups.doc(group.id);
-
     batch.set(
-      groupRef
-          .collection('members')
-          .doc(member.uid),
+      memberRef,
       member.toMap(),
     );
 
-    batch.update(groupRef, {
-      'members': FieldValue.increment(1),
-    });
+    batch.update(
+      groups.doc(group.id),
+      {
+        'members': FieldValue.increment(1),
+      },
+    );
 
     await batch.commit();
   }
 
   // ==========================
-  // GET ALL GROUPS
+  // GET GROUPS
   // ==========================
 
   Stream<List<GroupModel>> getGroups() {
@@ -132,20 +141,75 @@ class FirestoreService {
   Future<void> updateGroup(
     GroupModel group,
   ) async {
-    await groups
-        .doc(group.id)
-        .update(group.toMap());
+    await groups.doc(group.id).update(group.toMap());
   }
 
   // ==========================
   // DELETE GROUP
   // ==========================
 
-  Future<void> deleteGroup(
-    String id,
-  ) async {
-    await groups
-        .doc(id)
-        .delete();
+  Future<void> deleteGroup(String id) async {
+    await groups.doc(id).delete();
   }
+// ==========================
+// CREATE USER
+// ==========================
+
+Future<void> createUser(
+  UserModel user,
+) async {
+  await users.doc(user.uid).set(
+    user.toMap(),
+  );
+}
+
+// ==========================
+// GET USER
+// ==========================
+
+Future<UserModel?> getUser(
+  String uid,
+) async {
+  final snapshot = await users.doc(uid).get();
+
+  if (!snapshot.exists) {
+    return null;
+  }
+
+  return UserModel.fromMap(
+    snapshot.id,
+    snapshot.data() as Map<String, dynamic>,
+  );
+}
+
+// ==========================
+// GET USER GROUPS
+// ==========================
+
+Stream<List<GroupModel>> getUserGroups(
+  String uid,
+) {
+  return groups.snapshots().asyncMap((snapshot) async {
+    List<GroupModel> result = [];
+
+    for (final doc in snapshot.docs) {
+      final member = await doc.reference
+          .collection('members')
+          .doc(uid)
+          .get();
+
+      if (member.exists) {
+        result.add(
+          GroupModel.fromMap(
+            doc.id,
+            doc.data() as Map<String, dynamic>,
+          ),
+        );
+      }
+    }
+
+    return result;
+  });
+}
+
 }

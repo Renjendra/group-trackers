@@ -1,7 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../models/user_model.dart';
+import 'firestore_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final FirestoreService _firestoreService = FirestoreService();
 
   User? get currentUser => _auth.currentUser;
 
@@ -14,10 +20,22 @@ class AuthService {
     required String password,
   }) async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: _toEmail(username),
         password: password,
       );
+
+      final user = credential.user;
+
+      if (user != null) {
+        await _firestoreService.createUser(
+          UserModel(
+            uid: user.uid,
+            username: username,
+            createdAt: Timestamp.now(),
+          ),
+        );
+      }
 
       return null;
     } on FirebaseAuthException catch (e) {

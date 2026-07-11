@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/group_model.dart';
@@ -17,8 +18,18 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FirestoreService firestoreService = FirestoreService();
 
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text("User not logged in"),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Group Trackers"),
@@ -44,7 +55,9 @@ class _HomePageState extends State<HomePage> {
 
               Expanded(
                 child: StreamBuilder<List<GroupModel>>(
-                  stream: firestoreService.getGroups(),
+                  stream: firestoreService.getUserGroups(
+                    currentUser!.uid,
+                  ),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState ==
                         ConnectionState.waiting) {
@@ -53,10 +66,21 @@ class _HomePageState extends State<HomePage> {
                       );
                     }
 
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          snapshot.error.toString(),
+                        ),
+                      );
+                    }
+
+                    final groups = snapshot.data ?? [];
+
+                    if (groups.isEmpty) {
                       return Center(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.groups_outlined,
@@ -81,8 +105,6 @@ class _HomePageState extends State<HomePage> {
                       );
                     }
 
-                    final groups = snapshot.data!;
-
                     return ListView.builder(
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
@@ -96,14 +118,17 @@ class _HomePageState extends State<HomePage> {
                             subtitle: Text(
                               "Code: ${group.code}\nMembers: ${group.members}",
                             ),
-                            trailing:
-                                const Icon(Icons.arrow_forward_ios),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                            ),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) =>
-                                      GroupDetailPage(group: group),
+                                      GroupDetailPage(
+                                    group: group,
+                                  ),
                                 ),
                               );
                             },

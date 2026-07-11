@@ -66,33 +66,50 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
   }
 
   Future<void> acceptInvite() async {
-    final user = FirebaseAuth.instance.currentUser;
+  final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) return;
+  if (user == null) return;
 
-    if (foundGroup == null) return;
+  if (foundGroup == null) return;
 
+  setState(() {
+    isJoining = true;
+  });
+
+  final currentUser =
+      await firestoreService.getUser(user.uid);
+
+  if (currentUser == null) {
     setState(() {
-      isJoining = true;
+      isJoining = false;
     });
 
-    final member = MemberModel(
-      uid: user.uid,
-      username: user.email ?? "Unknown",
-      streak: 0,
-      role: "member",
-      joinedAt: Timestamp.now(),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("User data not found."),
+      ),
     );
 
-    await firestoreService.joinGroup(
-      foundGroup!,
-      member,
-    );
-
-    if (!mounted) return;
-
-    Navigator.pop(context, true);
+    return;
   }
+
+  final member = MemberModel(
+    uid: user.uid,
+    username: currentUser.username,
+    streak: 0,
+    role: "member",
+    joinedAt: Timestamp.now(),
+  );
+
+  await firestoreService.joinGroup(
+    foundGroup!,
+    member,
+  );
+
+  if (!mounted) return;
+
+  Navigator.pop(context, true);
+}
 
   @override
   Widget build(BuildContext context) {
