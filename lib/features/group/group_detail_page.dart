@@ -9,8 +9,13 @@ import '../../shared/widgets/failed_button.dart';
 import '../../shared/widgets/leaderboard_card.dart';
 import '../../shared/widgets/streak_card.dart';
 
+import 'best_streak_page.dart';
 import 'edit_group_page.dart';
 import 'group_info_page.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../models/notification_model.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final GroupModel group;
@@ -21,10 +26,12 @@ class GroupDetailPage extends StatefulWidget {
   });
 
   @override
-  State<GroupDetailPage> createState() => _GroupDetailPageState();
+  State<GroupDetailPage> createState() =>
+      _GroupDetailPageState();
 }
 
-class _GroupDetailPageState extends State<GroupDetailPage> {
+class _GroupDetailPageState
+    extends State<GroupDetailPage> {
   final FirestoreService firestoreService =
       FirestoreService();
 
@@ -114,8 +121,7 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
         final me = members.firstWhere(
           (e) =>
               e.uid ==
-              FirebaseAuth
-                  .instance.currentUser!.uid,
+              FirebaseAuth.instance.currentUser!.uid,
         );
 
         final isOwner =
@@ -141,6 +147,18 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       );
                       break;
 
+                    case "best":
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              BestStreakPage(
+                            groupId: group.id,
+                          ),
+                        ),
+                      );
+                      break;
+
                     case "edit":
                       editGroup();
                       break;
@@ -150,6 +168,55 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                       break;
 
                     case "leave":
+                      final confirm =
+                          await showDialog<bool>(
+                        context: context,
+                        builder: (_) {
+                          return AlertDialog(
+                            title: const Text(
+                              "Leave Group",
+                            ),
+                            content: const Text(
+                              "Are you sure you want to leave this group?\n\nYou can join this group again later using the invite code.",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(
+                                    context,
+                                    false,
+                                  );
+                                },
+                                child: const Text(
+                                  "Cancel",
+                                ),
+                              ),
+                              ElevatedButton(
+                                style:
+                                    ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.red,
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(
+                                    context,
+                                    true,
+                                  );
+                                },
+                                child: const Text(
+                                  "Leave Group",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirm != true) return;
+
                       await firestoreService
                           .leaveGroup(
                         group.id,
@@ -167,18 +234,19 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                     return const [
                       PopupMenuItem(
                         value: "info",
-                        child:
-                            Text("Group Info"),
+                        child: Text("Group Info"),
+                      ),
+                      PopupMenuItem(
+                        value: "best",
+                        child: Text("Best Streak"),
                       ),
                       PopupMenuItem(
                         value: "edit",
-                        child:
-                            Text("Edit Group"),
+                        child: Text("Edit Group"),
                       ),
                       PopupMenuItem(
                         value: "delete",
-                        child:
-                            Text("Delete Group"),
+                        child: Text("Delete Group"),
                       ),
                     ];
                   }
@@ -186,13 +254,15 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
                   return const [
                     PopupMenuItem(
                       value: "info",
-                      child:
-                          Text("Group Info"),
+                      child: Text("Group Info"),
+                    ),
+                    PopupMenuItem(
+                      value: "best",
+                      child: Text("Best Streak"),
                     ),
                     PopupMenuItem(
                       value: "leave",
-                      child:
-                          Text("Leave Group"),
+                      child: Text("Leave Group"),
                     ),
                   ];
                 },
@@ -212,51 +282,50 @@ class _GroupDetailPageState extends State<GroupDetailPage> {
 
                 FailedButton(
                   onPressed: () async {
-                    final confirm =
-                        await showDialog<bool>(
+                    final confirm = await showDialog<bool>(
                       context: context,
                       builder: (_) {
                         return AlertDialog(
-                          title: const Text(
-                            "I Failed",
-                          ),
-                          content:
-                              const Text(
+                          title: const Text("I Failed"),
+                          content: const Text(
                             "Reset your streak?",
                           ),
                           actions: [
                             TextButton(
                               onPressed: () =>
-                                  Navigator.pop(
-                                context,
-                                false,
-                              ),
-                              child:
-                                  const Text(
-                                "Cancel",
-                              ),
+                                  Navigator.pop(context, false),
+                              child: const Text("Cancel"),
                             ),
                             ElevatedButton(
                               onPressed: () =>
-                                  Navigator.pop(
-                                context,
-                                true,
-                              ),
-                              child:
-                                  const Text(
-                                "Reset",
-                              ),
+                                  Navigator.pop(context, true),
+                              child: const Text("Reset"),
                             ),
                           ],
                         );
                       },
                     );
 
-                    if (confirm != true)
-                      return;
+                    if (confirm != true) return;
 
-                    await firestoreService
-                        .resetMember(
+                    final notification = NotificationModel(
+                      id: FirebaseFirestore.instance
+                          .collection("notifications")
+                          .doc()
+                          .id,
+                      groupId: group.id,
+                      uid: me.uid,
+                      username: me.username,
+                      streak: me.streakDays,
+                      createdAt: Timestamp.now(),
+                      isRead: false,
+                    );
+
+                    await firestoreService.createNotification(
+                      notification,
+                    );
+
+                    await firestoreService.resetMember(
                       group.id,
                       me.uid,
                     );

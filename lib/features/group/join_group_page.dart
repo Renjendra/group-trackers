@@ -99,6 +99,7 @@ class _JoinGroupPageState extends State<JoinGroupPage> {
   role: "member",
   joinedAt: Timestamp.now(),
   lastResetAt: Timestamp.now(),
+  bestStreak: 0,
 );
 
   await firestoreService.joinGroup(

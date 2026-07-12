@@ -7,12 +7,16 @@ class MemberModel {
   final Timestamp joinedAt;
   final Timestamp lastResetAt;
 
+  // NEW
+  final int bestStreak;
+
   const MemberModel({
     required this.uid,
     required this.username,
     required this.role,
     required this.joinedAt,
     required this.lastResetAt,
+    required this.bestStreak,
   });
 
   Map<String, dynamic> toMap() {
@@ -21,6 +25,7 @@ class MemberModel {
       'role': role,
       'joinedAt': joinedAt,
       'lastResetAt': lastResetAt,
+      'bestStreak': bestStreak,
     };
   }
 
@@ -34,6 +39,7 @@ class MemberModel {
       role: map['role'] ?? 'member',
       joinedAt: map['joinedAt'] ?? Timestamp.now(),
       lastResetAt: map['lastResetAt'] ?? Timestamp.now(),
+      bestStreak: map['bestStreak'] ?? 0,
     );
   }
 
@@ -43,6 +49,7 @@ class MemberModel {
     String? role,
     Timestamp? joinedAt,
     Timestamp? lastResetAt,
+    int? bestStreak,
   }) {
     return MemberModel(
       uid: uid ?? this.uid,
@@ -50,14 +57,12 @@ class MemberModel {
       role: role ?? this.role,
       joinedAt: joinedAt ?? this.joinedAt,
       lastResetAt: lastResetAt ?? this.lastResetAt,
+      bestStreak: bestStreak ?? this.bestStreak,
     );
   }
 
   int get streakDays {
     final reset = lastResetAt.toDate();
-
-    final now = DateTime.now();
-
-    return now.difference(reset).inDays;
+    return DateTime.now().difference(reset).inDays;
   }
 }

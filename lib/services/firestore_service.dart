@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/group_model.dart';
 import '../models/member_model.dart';
 import '../models/user_model.dart';
+import '../models/notification_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -10,6 +11,8 @@ class FirestoreService {
   CollectionReference get groups => _firestore.collection('groups');
 
   CollectionReference get users => _firestore.collection('users');
+
+  CollectionReference get notifications => _firestore.collection('notifications');
 
   // ==========================
   // CREATE GROUP
@@ -97,7 +100,6 @@ class FirestoreService {
         .collection('members')
         .doc(member.uid);
 
-    // Jangan menambah member jika sudah bergabung
     if ((await memberRef.get()).exists) {
       return;
     }
@@ -151,146 +153,234 @@ class FirestoreService {
   Future<void> deleteGroup(String id) async {
     await groups.doc(id).delete();
   }
-// ==========================
-// CREATE USER
-// ==========================
 
-Future<void> createUser(
-  UserModel user,
-) async {
-  await users.doc(user.uid).set(
-    user.toMap(),
-  );
-}
+  // ==========================
+  // CREATE USER
+  // ==========================
 
-// ==========================
-// GET USER
-// ==========================
-
-Future<UserModel?> getUser(
-  String uid,
-) async {
-  final snapshot = await users.doc(uid).get();
-
-  if (!snapshot.exists) {
-    return null;
+  Future<void> createUser(
+    UserModel user,
+  ) async {
+    await users.doc(user.uid).set(
+          user.toMap(),
+        );
   }
 
-  return UserModel.fromMap(
-    snapshot.id,
-    snapshot.data() as Map<String, dynamic>,
-  );
-}
+  // ==========================
+  // GET USER
+  // ==========================
 
-// ==========================
-// GET USER GROUPS
-// ==========================
+  Future<UserModel?> getUser(
+    String uid,
+  ) async {
+    final snapshot = await users.doc(uid).get();
 
-Stream<List<GroupModel>> getUserGroups(
-  String uid,
-) {
-  return groups.snapshots().asyncMap((snapshot) async {
-    List<GroupModel> result = [];
-
-    for (final doc in snapshot.docs) {
-      final member = await doc.reference
-          .collection('members')
-          .doc(uid)
-          .get();
-
-      if (member.exists) {
-        result.add(
-          GroupModel.fromMap(
-            doc.id,
-            doc.data() as Map<String, dynamic>,
-          ),
-        );
-      }
+    if (!snapshot.exists) {
+      return null;
     }
 
-    return result;
-  });
-}
+    return UserModel.fromMap(
+      snapshot.id,
+      snapshot.data() as Map<String, dynamic>,
+    );
+  }
 
+  // ==========================
+  // GET USER GROUPS
+  // ==========================
 
-Future<void> resetMember(
+  Stream<List<GroupModel>> getUserGroups(
+    String uid,
+  ) {
+    return groups.snapshots().asyncMap((snapshot) async {
+      List<GroupModel> result = [];
+
+      for (final doc in snapshot.docs) {
+        final member = await doc.reference
+            .collection('members')
+            .doc(uid)
+            .get();
+
+        if (member.exists) {
+          result.add(
+            GroupModel.fromMap(
+              doc.id,
+              doc.data() as Map<String, dynamic>,
+            ),
+          );
+        }
+      }
+
+      return result;
+    });
+  }
+
+  // ==========================
+  // RESET MEMBER
+  // ==========================
+
+  Future<void> resetMember(
   String groupId,
   String uid,
 ) async {
-  await groups
+  final ref = groups
       .doc(groupId)
       .collection('members')
-      .doc(uid)
-      .update({
+      .doc(uid);
+
+  final snapshot = await ref.get();
+
+  if (!snapshot.exists) return;
+
+  final member = MemberModel.fromMap(
+    snapshot.id,
+    snapshot.data()!,
+  );
+
+  int best = member.bestStreak;
+
+  if (member.streakDays > best) {
+    best = member.streakDays;
+  }
+
+  await ref.update({
+    'bestStreak': best,
     'lastResetAt': Timestamp.now(),
   });
 }
 
-Future<void> leaveGroup(
-  String groupId,
-  String uid,
-) async {
-  final batch = _firestore.batch();
+  // ==========================
+  // LEAVE GROUP
+  // ==========================
 
-  final groupRef = groups.doc(groupId);
+  Future<void> leaveGroup(
+    String groupId,
+    String uid,
+  ) async {
+    final batch = _firestore.batch();
 
-  batch.delete(
-    groupRef
+    final groupRef = groups.doc(groupId);
+
+    batch.delete(
+      groupRef
+          .collection('members')
+          .doc(uid),
+    );
+
+    batch.update(
+      groupRef,
+      {
+        'members': FieldValue.increment(-1),
+      },
+    );
+
+    await batch.commit();
+  }
+
+  // ==========================
+  // GET MEMBERS
+  // ==========================
+
+  Stream<List<MemberModel>> getMembers(
+    String groupId,
+  ) {
+    return groups
+        .doc(groupId)
         .collection('members')
-        .doc(uid),
-  );
+        .snapshots()
+        .map((snapshot) {
+      final members = snapshot.docs.map((doc) {
+        return MemberModel.fromMap(
+          doc.id,
+          doc.data(),
+        );
+      }).toList();
 
-  batch.update(
-    groupRef,
-    {
-      'members': FieldValue.increment(-1),
-    },
-  );
+      members.sort(
+        (a, b) =>
+            b.streakDays.compareTo(a.streakDays),
+      );
 
-  await batch.commit();
-}
+      return members;
+    });
+  }
 
-// ==========================
-// GET MEMBERS
-// ==========================
+  Future<List<MemberModel>> getMembersList(
+    String groupId,
+  ) async {
+    final snapshot = await groups
+        .doc(groupId)
+        .collection('members')
+        .get();
 
-Stream<List<MemberModel>> getMembers(
-  String groupId,
-) {
-  return groups
-      .doc(groupId)
-      .collection('members')
-      .snapshots()
-      .map((snapshot) {
-    final members = snapshot.docs.map((doc) {
+    return snapshot.docs.map((doc) {
       return MemberModel.fromMap(
         doc.id,
         doc.data(),
       );
     }).toList();
+  }
 
-    members.sort(
-      (a, b) =>
-          b.streakDays.compareTo(a.streakDays),
-    );
+  // ==========================
+  // HALL OF FAME
+  // ==========================
 
-    return members;
-  });
+  Stream<List<MemberModel>> getHallOfFame(
+    String groupId,
+  ) {
+    return groups
+        .doc(groupId)
+        .collection('members')
+        .where(
+          'bestStreak',
+          isGreaterThanOrEqualTo: 15,
+        )
+        .orderBy(
+          'bestStreak',
+          descending: true,
+        )
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return MemberModel.fromMap(
+          doc.id,
+          doc.data(),
+        );
+      }).toList();
+    });
+  }
+  
+  // ==========================
+// CREATE NOTIFICATION
+// ==========================
+
+Future<void> createNotification(
+  NotificationModel notification,
+) async {
+  await notifications
+      .doc(notification.id)
+      .set(notification.toMap());
 }
 
-Future<List<MemberModel>> getMembersList(
-  String groupId,
-) async {
-  final snapshot = await groups
-      .doc(groupId)
-      .collection('members')
-      .get();
+// ==========================
+// GET NOTIFICATIONS
+// ==========================
 
-  return snapshot.docs.map((doc) {
-    return MemberModel.fromMap(
-      doc.id,
-      doc.data(),
-    );
-  }).toList();
+Stream<List<NotificationModel>>
+    getNotifications() {
+  return notifications
+      .orderBy(
+        'createdAt',
+        descending: true,
+      )
+      .snapshots()
+      .map((snapshot) {
+    return snapshot.docs.map((doc) {
+      return NotificationModel.fromMap(
+        doc.id,
+        doc.data() as Map<String, dynamic>,
+      );
+    }).toList();
+  });
 }
 }

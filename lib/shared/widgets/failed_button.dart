@@ -12,23 +12,27 @@ class FailedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 60,
+      height: 58,
       child: ElevatedButton.icon(
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFFD32F2F),
           foregroundColor: Colors.white,
+          elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
         ),
-        onPressed: onPressed,
-        icon: const Icon(Icons.sentiment_very_dissatisfied),
+        icon: const Icon(
+          Icons.restart_alt_rounded,
+          size: 24,
+        ),
         label: const Text(
           "I FAILED",
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
-            letterSpacing: 1,
+            letterSpacing: 1.2,
           ),
         ),
       ),

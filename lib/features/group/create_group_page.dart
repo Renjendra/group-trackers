@@ -69,6 +69,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   role: "owner",
   joinedAt: Timestamp.now(),
   lastResetAt: Timestamp.now(),
+  bestStreak: 0,
 );
 
   await firestoreService.createGroup(
