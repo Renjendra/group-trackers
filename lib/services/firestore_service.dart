@@ -262,7 +262,6 @@ Stream<List<MemberModel>> getMembers(
       .collection('members')
       .snapshots()
       .map((snapshot) {
-
     final members = snapshot.docs.map((doc) {
       return MemberModel.fromMap(
         doc.id,
@@ -279,4 +278,19 @@ Stream<List<MemberModel>> getMembers(
   });
 }
 
+Future<List<MemberModel>> getMembersList(
+  String groupId,
+) async {
+  final snapshot = await groups
+      .doc(groupId)
+      .collection('members')
+      .get();
+
+  return snapshot.docs.map((doc) {
+    return MemberModel.fromMap(
+      doc.id,
+      doc.data(),
+    );
+  }).toList();
+}
 }
