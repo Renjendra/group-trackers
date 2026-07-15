@@ -32,7 +32,7 @@ class NotificationTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          "Nyoli hari ini dan kehilangan streak ${notification.streak} hari",
+          "lost a ${notification.streak} day streak",
         ),
         trailing: Text(
           "${notification.createdAt.toDate().day}/${notification.createdAt.toDate().month}",

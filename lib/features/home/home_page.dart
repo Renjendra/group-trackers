@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
      appBar: AppBar(
-      title: const Text("Bujang Streaks"),
+      title: const Text("Group Tracker"),
       centerTitle: true,
       actions: [
 

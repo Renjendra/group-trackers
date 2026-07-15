@@ -62,7 +62,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 25),
 
             const Text(
-              "Bujang Streaks",
+              "Group Trackers",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -73,7 +73,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 10),
 
             Text(
-              "Alat Streaks Bujang",
+              "tracking with your friends",
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 16,
