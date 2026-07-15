@@ -85,86 +85,78 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Group Trackers"),
-        centerTitle: true,
-        actions: [
-          StreamBuilder(
-            stream: firestoreService.getNotifications(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return IconButton(
+     appBar: AppBar(
+      title: const Text("Bujang Streaks"),
+      centerTitle: true,
+      actions: [
+
+        StreamBuilder<int>(
+          stream: firestoreService
+              .unreadNotificationCount(
+            currentUser!.uid,
+          ),
+          builder: (context, snapshot) {
+
+            final unread = snapshot.data ?? 0;
+
+            return Stack(
+              children: [
+
+                IconButton(
                   icon: const Icon(
-                    Icons.notifications_outlined,
+                    Icons.notifications,
                   ),
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => NotificationPage(),
+                        builder: (_) =>
+                            const NotificationPage(),
                       ),
                     );
+
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
-                );
-              }
+                ),
 
-              final notifications = snapshot.data!;
-
-              final unread = notifications
-                  .where((e) => !e.isRead)
-                  .length;
-
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NotificationPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  if (unread > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 18,
-                        height: 18,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          unread > 9
-                              ? "9+"
-                              : unread.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                if (unread > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.all(4),
+                      decoration:
+                          const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unread.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
                     ),
-                ],
-              );
-            },
-          ),
+                  ),
+              ],
+            );
+          },
+        ),
 
-          IconButton(
-            tooltip: "Logout",
-            onPressed: logout,
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
+        IconButton(
+          tooltip: "Logout",
+          onPressed: logout,
+          icon: const Icon(Icons.logout),
+        ),
+      ],
+    ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

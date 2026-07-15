@@ -12,18 +12,34 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: const CircleAvatar(
-        child: Icon(Icons.notifications),
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 6,
       ),
-      title: Text(
-        "${notification.username} failed after ${notification.streak} days",
-      ),
-      subtitle: Text(
-        notification.createdAt
-            .toDate()
-            .toString()
-            .substring(0, 16),
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: Colors.red,
+          child: Icon(
+            Icons.local_fire_department,
+            color: Colors.white,
+          ),
+        ),
+        title: Text(
+          notification.username,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          "Nyoli hari ini dan kehilangan streak ${notification.streak} hari",
+        ),
+        trailing: Text(
+          "${notification.createdAt.toDate().day}/${notification.createdAt.toDate().month}",
+          style: const TextStyle(
+            color: Colors.grey,
+          ),
+        ),
       ),
     );
   }

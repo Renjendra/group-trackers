@@ -13,9 +13,6 @@ import 'best_streak_page.dart';
 import 'edit_group_page.dart';
 import 'group_info_page.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../../models/notification_model.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final GroupModel group;
@@ -238,7 +235,7 @@ class _GroupDetailPageState
                       ),
                       PopupMenuItem(
                         value: "best",
-                        child: Text("Best Streak"),
+                        child: Text("Hall Of Fame"),
                       ),
                       PopupMenuItem(
                         value: "edit",
@@ -308,21 +305,9 @@ class _GroupDetailPageState
 
                     if (confirm != true) return;
 
-                    final notification = NotificationModel(
-                      id: FirebaseFirestore.instance
-                          .collection("notifications")
-                          .doc()
-                          .id,
-                      groupId: group.id,
-                      uid: me.uid,
-                      username: me.username,
-                      streak: me.streakDays,
-                      createdAt: Timestamp.now(),
-                      isRead: false,
-                    );
-
                     await firestoreService.createNotification(
-                      notification,
+                      groupId: group.id,
+                      sender: me,
                     );
 
                     await firestoreService.resetMember(

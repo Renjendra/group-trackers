@@ -15,7 +15,7 @@ class BestStreakPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Best Streak"),
+        title: const Text("Hall Of Fame"),
       ),
       body: StreamBuilder<List<MemberModel>>(
         stream: FirestoreService().getMembers(groupId),
@@ -40,7 +40,7 @@ class BestStreakPage extends StatelessWidget {
           if (members.isEmpty) {
             return const Center(
               child: Text(
-                "No Best Streak Yet",
+                "No Hall Of Fame Yet",
               ),
             );
           }

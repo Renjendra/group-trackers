@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../auth/login_page.dart';
+import '../home/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -19,12 +21,25 @@ class _SplashPageState extends State<SplashPage> {
     super.initState();
 
     Timer(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const LoginPage(),
-        ),
-      );
+
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomePage(),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const LoginPage(),
+          ),
+        );
+      }
+
     });
   }
 
@@ -33,11 +48,9 @@ class _SplashPageState extends State<SplashPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-
           children: [
 
             const Icon(
@@ -49,7 +62,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 25),
 
             const Text(
-              "Group Trackers",
+              "Bujang Streaks",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 32,
@@ -60,7 +73,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 10),
 
             Text(
-              "Track anything with your friends",
+              "Alat Streaks Bujang",
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 16,

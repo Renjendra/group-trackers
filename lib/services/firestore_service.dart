@@ -354,12 +354,37 @@ class FirestoreService {
 // CREATE NOTIFICATION
 // ==========================
 
-Future<void> createNotification(
-  NotificationModel notification,
-) async {
-  await notifications
-      .doc(notification.id)
-      .set(notification.toMap());
+Future<void> createNotification({
+  required String groupId,
+  required MemberModel sender,
+}) async {
+  final members = await getMembersList(groupId);
+
+  final batch = _firestore.batch();
+
+  for (final member in members) {
+    if (member.uid == sender.uid) {
+      continue;
+    }
+
+    final doc = notifications.doc();
+
+    batch.set(
+      doc,
+      NotificationModel(
+        id: doc.id,
+        groupId: groupId,
+        uid: sender.uid,
+        username: sender.username,
+        receiverUid: member.uid,
+        streak: sender.streakDays,
+        createdAt: Timestamp.now(),
+        isRead: false,
+      ).toMap(),
+    );
+  }
+
+  await batch.commit();
 }
 
 // ==========================
@@ -367,8 +392,14 @@ Future<void> createNotification(
 // ==========================
 
 Stream<List<NotificationModel>>
-    getNotifications() {
+    getNotifications(
+  String uid,
+) {
   return notifications
+      .where(
+        'receiverUid',
+        isEqualTo: uid,
+      )
       .orderBy(
         'createdAt',
         descending: true,
@@ -382,5 +413,51 @@ Stream<List<NotificationModel>>
       );
     }).toList();
   });
+}
+
+Future<void> markAllNotificationsAsRead(
+  String uid,
+) async {
+  final snapshot = await notifications
+      .where(
+        'receiverUid',
+        isEqualTo: uid,
+      )
+      .where(
+        'isRead',
+        isEqualTo: false,
+      )
+      .get();
+
+  final batch = _firestore.batch();
+
+  for (final doc in snapshot.docs) {
+    batch.update(
+      doc.reference,
+      {
+        'isRead': true,
+      },
+    );
+  }
+
+  await batch.commit();
+}
+
+Stream<int> unreadNotificationCount(
+  String uid,
+) {
+  return notifications
+      .where(
+        'receiverUid',
+        isEqualTo: uid,
+      )
+      .where(
+        'isRead',
+        isEqualTo: false,
+      )
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs.length,
+      );
 }
 }

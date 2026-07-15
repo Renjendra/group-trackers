@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               const Spacer(),
 
               const Text(
-                "Welcome to Group Trackers",
+                "Welcome Bujang!",
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,

@@ -2,11 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotificationModel {
   final String id;
+
   final String groupId;
+
+  // Member yang gagal
   final String uid;
+
+  // Username member yang gagal
   final String username;
+
+  // Penerima notifikasi
+  final String receiverUid;
+
   final int streak;
+
   final Timestamp createdAt;
+
   final bool isRead;
 
   const NotificationModel({
@@ -14,6 +25,7 @@ class NotificationModel {
     required this.groupId,
     required this.uid,
     required this.username,
+    required this.receiverUid,
     required this.streak,
     required this.createdAt,
     required this.isRead,
@@ -24,6 +36,7 @@ class NotificationModel {
       'groupId': groupId,
       'uid': uid,
       'username': username,
+      'receiverUid': receiverUid,
       'streak': streak,
       'createdAt': createdAt,
       'isRead': isRead,
@@ -39,6 +52,7 @@ class NotificationModel {
       groupId: map['groupId'],
       uid: map['uid'],
       username: map['username'],
+      receiverUid: map['receiverUid'],
       streak: map['streak'],
       createdAt: map['createdAt'],
       isRead: map['isRead'] ?? false,
